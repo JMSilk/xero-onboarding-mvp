@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xero Add-on — Account Code Setup</title>
+  <style>
+    :root {
+      --sg-primaryBlue: #4188EF;
+      --sg-accentBlue: #306ABF;
+      --sg-softBlue: #F1F7FF;
+      --sg-offBlack: #323338;
+      --sg-midGray: #66717D;
+      --sg-lightGray: #979CA1;
+      --sg-keyLineGray: #DFDFDF;
+      --sg-backgroundGray: #F8F8F8;
+      --sg-green: #49A61E;
+      --sg-greenLight: #DCF6C7;
+      --sg-amber: #F8BA00;
+      --sg-amberLight: #FFE8AB;
+      --sg-amberDark: #775D0A;
+      --sg-red: #E01C1C;
+      --sg-redLight: #FFD8D8;
+      --sg-gapS: 8px;
+      --sg-gapM: 16px;
+      --sg-gapL: 24px;
+      --sg-gapXL: 32px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--sg-backgroundGray);
+      color: var(--sg-offBlack);
+      font-size: 14px;
+      line-height: 22px;
+    }
+
+    /* ── Top nav bar ── */
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--sg-keyLineGray);
+      display: flex;
+      align-items: center;
+      gap: var(--sg-gapM);
+      padding: 0 var(--sg-gapXL);
+      height: 56px;
+    }
+    .topbar-logo {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--sg-offBlack);
+      letter-spacing: -0.3px;
+    }
+    .topbar-logo span { color: var(--sg-primaryBlue); }
+    .topbar-divider { width: 1px; height: 24px; background: var(--sg-keyLineGray); }
+    .topbar-addon {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--sg-midGray);
+    }
+    .xero-badge {
+      background: #00B4E3;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Page wrapper ── */
+    .page {
+      max-width: 780px;
+      margin: var(--sg-gapXL) auto;
+      padding: 0 var(--sg-gapM);
+    }
+
+    /* ── Step indicator ── */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: var(--sg-gapL);
+    }
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: var(--sg-gapS);
+      flex: 1;
+    }
+    .step-item:last-child { flex: 0; }
+    .step-number {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 500;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .step-number.active { background: var(--sg-primaryBlue); color: #fff; }
+    .step-number.done { background: var(--sg-green); color: #fff; }
+    .step-number.pending { background: #fff; color: var(--sg-lightGray); border: 1.5px solid var(--sg-keyLineGray); }
+    .step-label {
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .step-label.active { color: var(--sg-offBlack); font-weight: 500; }
+    .step-label.pending { color: var(--sg-lightGray); }
+    .step-connector {
+      flex: 1;
+      height: 1px;
+      background: var(--sg-keyLineGray);
+      margin: 0 var(--sg-gapS);
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border: 1px solid var(--sg-keyLineGray);
+      border-radius: 8px;
+      padding: var(--sg-gapXL);
+      margin-bottom: var(--sg-gapM);
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: -0.15px;
+      margin-bottom: var(--sg-gapS);
+    }
+    .card-desc {
+      color: var(--sg-midGray);
+      font-size: 13px;
+      line-height: 20px;
+      margin-bottom: var(--sg-gapL);
+    }
+
+    /* ── Form fields ── */
+    .field-group { display: flex; flex-direction: column; gap: var(--sg-gapM); }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--sg-offBlack);
+    }
+    .field-hint {
+      font-size: 12px;
+      color: var(--sg-lightGray);
+      margin-top: 2px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--sg-keyLineGray);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--sg-offBlack);
+      background: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%2366717D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--sg-primaryBlue);
+      box-shadow: 0 0 0 3px rgba(65, 136, 239, 0.12);
+    }
+    select.error { border-color: var(--sg-red); }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sg-gapM);
+    }
+
+    /* ── Validation alert ── */
+    .alert {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: var(--sg-gapM);
+      align-items: center;
+      gap: 8px;
+    }
+    .alert.error { background: var(--sg-redLight); color: #943621; border: 1px solid #F5B8B8; }
+    .alert.warning { background: var(--sg-amberLight); color: var(--sg-amberDark); border: 1px solid #F5D97A; }
+    .alert.show { display: flex; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--sg-primaryBlue);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--sg-accentBlue); }
+    .btn-secondary {
+      background: #fff;
+      color: var(--sg-offBlack);
+      border: 1px solid var(--sg-keyLineGray);
+    }
+    .btn-secondary:hover { background: var(--sg-backgroundGray); }
+    .btn-success {
+      background: var(--sg-green);
+      color: #fff;
+    }
+    .btn-success:hover { background: #3a8518; }
+
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--sg-gapS);
+      padding-top: var(--sg-gapL);
+      margin-top: var(--sg-gapL);
+      border-top: 1px solid var(--sg-keyLineGray);
+    }
+
+    /* ── Mapping table ── */
+    .mapping-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: var(--sg-gapM);
+    }
+    .mapping-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sg-midGray);
+      background: var(--sg-backgroundGray);
+      border-bottom: 1px solid var(--sg-keyLineGray);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .mapping-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--sg-keyLineGray);
+      vertical-align: middle;
+    }
+    .mapping-table tr:last-child td { border-bottom: none; }
+    .mapping-table tr.mismatch td { background: rgba(248, 186, 0, 0.06); }
+
+    .code-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--sg-softBlue);
+      color: var(--sg-accentBlue);
+      font-weight: 500;
+    }
+    .code-pill.sg { background: #F0F0FF; color: #3652BE; }
+
+    .match-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .match-badge.match { background: var(--sg-greenLight); color: #467D00; }
+    .match-badge.mismatch { background: var(--sg-amberLight); color: var(--sg-amberDark); }
+    .match-badge.pending { background: var(--sg-backgroundGray); color: var(--sg-lightGray); }
+
+    /* ── Mismatch summary banner ── */
+    .mismatch-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--sg-amberLight);
+      border: 1px solid #F5D97A;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: var(--sg-gapM);
+      font-size: 13px;
+      color: var(--sg-amberDark);
+    }
+    .mismatch-banner.show { display: flex; }
+    .mismatch-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Success state ── */
+    .success-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: var(--sg-gapXL) 0;
+      gap: var(--sg-gapM);
+    }
+    .success-state.show { display: flex; }
+    .success-icon {
+      width: 56px; height: 56px;
+      background: var(--sg-greenLight);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .success-state h2 { font-size: 18px; font-weight: 500; }
+    .success-state p { color: var(--sg-midGray); font-size: 13px; max-width: 400px; }
+
+    /* ── Info box ── */
+    .info-box {
+      background: var(--sg-softBlue);
+      border: 1px solid #C5DCF9;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--sg-accentBlue);
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-bottom: var(--sg-gapL);
+    }
+
+    /* ── Step 2 header row ── */
+    .step2-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--sg-gapM);
+    }
+    .match-legend {
+      display: flex;
+      gap: var(--sg-gapS);
+      align-items: center;
+      font-size: 12px;
+      color: var(--sg-midGray);
+    }
+
+    select.mapping-select {
+      padding: 6px 32px 6px 10px;
+      font-size: 13px;
+      min-width: 220px;
+    }
+
+    /* ── Scroll-safe table wrapper ── */
+    .table-wrapper { overflow-x: auto; }
+  </style>
+</head>
+<body>
+
+<!-- Top nav -->
+<div class="topbar">
+  <div class="topbar-logo">Store<span>ganise</span></div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-addon">
+    <div class="xero-badge">XERO</div>
+    Add-on Setup
+  </div>
+</div>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Step indicator -->
+  <div class="step-indicator">
+    <div class="step-item">
+      <div class="step-number" id="step1-num">1</div>
+      <div class="step-label" id="step1-lbl">Default account codes</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="step-item">
+      <div class="step-number pending" id="step2-num">2</div>
+      <div class="step-label pending" id="step2-lbl">Map all account codes</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STEP 1 ══════════════════════════════ -->
+  <div id="view-step1">
+    <div class="card">
+      <div class="card-title">Default account code setup</div>
+      <div class="card-desc">
+        Select which Xero account codes should be used as defaults for invoicing and payment recording. These can be changed at any time in Add-on settings.
+      </div>
+
+      <div class="info-box">
+        <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="#4188EF" stroke-width="1.4"/><path d="M8 7v5" stroke="#4188EF" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="5" r="0.7" fill="#4188EF"/></svg>
+        These values are saved to the Add-on config only — no changes are made to your Storeganise settings or Xero chart of accounts.
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Default account code</div>
+          <select id="s1-account" onchange="updateStep1()">
+            <option value="">Select Xero account…</option>
+          </select>
+          <div class="field-hint">Used for all invoice line items unless overridden by account code mapping.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Default payment account</div>
+          <select id="s1-payment" onchange="updateStep1()">
+            <option value="">Select Xero account…</option>
+          </select>
+          <div class="field-hint">The bank/clearing account payments are recorded against in Xero.</div>
+        </div>
+      </div>
+
+      <div class="alert error" id="s1-error">
+        <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="#943621" stroke-width="1.4"/><path d="M8 5v4" stroke="#943621" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11" r="0.7" fill="#943621"/></svg>
+        Please select both a default account code and a default payment account before continuing.
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-primary" onclick="proceedToStep2()">Continue to step 2 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ STEP 2 ══════════════════════════════ -->
+  <div id="view-step2" style="display:none;">
+    <div class="card">
+      <div class="step2-header">
+        <div>
+          <div class="card-title">Map all account codes</div>
+          <div class="card-desc" style="margin-bottom:0;">
+            Match each Storeganise account code to the correct Xero equivalent.
+            Mismatches are flagged but won't block you from downloading.
+          </div>
+        </div>
+        <div class="match-legend">
+          <span class="match-badge match">✓ Match</span>
+          <span class="match-badge mismatch">⚠ Mismatch</span>
+          <span class="match-badge pending">— Unmapped</span>
+        </div>
+      </div>
+
+      <div class="mismatch-banner" id="mismatch-banner">
+        <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M8 2L14.9 14H1.1L8 2Z" stroke="#775D0A" stroke-width="1.4" stroke-linejoin="round"/><path d="M8 7v3" stroke="#775D0A" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="12" r="0.7" fill="#775D0A"/></svg>
+        <span id="mismatch-text"></span>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="mapping-table" id="mapping-table">
+          <thead>
+            <tr>
+              <th>Storeganise code</th>
+              <th>Label</th>
+              <th>Xero account</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="mapping-body">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn btn-secondary" onclick="goBackToStep1()">← Back</button>
+        <button class="btn btn-success" onclick="mapAndDownload()">
+          <svg width="15" height="15" fill="none" viewBox="0 0 15 15"><path d="M7.5 2v8M4 7.5l3.5 3.5L11 7.5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12.5h11" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Map codes &amp; download
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ SUCCESS ══════════════════════════════ -->
+  <div id="view-success" style="display:none;">
+    <div class="card">
+      <div class="success-state show">
+        <div class="success-icon">
+          <svg width="28" height="28" fill="none" viewBox="0 0 28 28"><path d="M6 14.5l5.5 5.5L22 9" stroke="#49A61E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2>Setup complete</h2>
+        <p>Your account code mapping has been saved to the Add-on config and your reference file has been downloaded.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button class="btn btn-secondary" onclick="reviewSetup()">Review setup</button>
+          <button class="btn btn-primary" onclick="enableAddon()">Enable Add-on →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  // ── Data ────────────────────────────────────────────────────────────────
+
+  const XERO_ACCOUNTS = [
+    { code: '200',  label: 'Sales Revenue' },
+    { code: '210',  label: 'Consulting Income' },
+    { code: '4000', label: 'Rent' },           // matches SG "Rent"
+    { code: '4010', label: 'Deposit' },         // matches SG "Deposit"
+    { code: '4020', label: 'Prepay' },          // matches SG "Prepay"
+    { code: '4030', label: 'Products' },        // matches SG "Products"
+    { code: '4040', label: 'Promocode' },       // matches SG "Promocode"
+    { code: '400',  label: 'Advertising' },
+    { code: '404',  label: 'Bank Fees' },
+    { code: '408',  label: 'Office Cleaning' },
+    { code: '420',  label: 'Legal Fees' },
+    { code: '430',  label: 'Depreciation' },
+    { code: '445',  label: 'Insurance Premium' },
+    { code: '461',  label: 'Office Supplies' },
+    { code: '477',  label: 'Electricity & Gas' },
+  ];
+
+  const SG_CODES = [
+    { code: '4000', label: 'Rent' },
+    { code: '4010', label: 'Deposit' },
+    { code: '4020', label: 'Prepay' },
+    { code: '4030', label: 'Products' },
+    { code: '4040', label: 'Promocode' },
+  ];
+
+  // ── State ────────────────────────────────────────────────────────────────
+  let saved = {
+    defaultAccountCode: '',
+    defaultPaymentAccount: '',
+    mappings: {} // sgCode -> xeroCode
+  };
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  function init() {
+    // Populate step 1 dropdowns
+    ['s1-account', 's1-payment'].forEach(id => {
+      const sel = document.getElementById(id);
+      XERO_ACCOUNTS.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.code;
+        opt.textContent = `${a.code} — ${a.label}`;
+        sel.appendChild(opt);
+      });
+    });
+
+    // Restore saved values if any
+    if (saved.defaultAccountCode) document.getElementById('s1-account').value = saved.defaultAccountCode;
+    if (saved.defaultPaymentAccount) document.getElementById('s1-payment').value = saved.defaultPaymentAccount;
+
+    updateStepIndicator(1);
+  }
+
+  // ── Step 1 logic ─────────────────────────────────────────────────────────
+  function updateStep1() {
+    document.getElementById('s1-error').classList.remove('show');
+    document.getElementById('s1-account').classList.remove('error');
+    document.getElementById('s1-payment').classList.remove('error');
+  }
+
+  function proceedToStep2() {
+    const acct = document.getElementById('s1-account').value;
+    const pmt  = document.getElementById('s1-payment').value;
+
+    if (!acct || !pmt) {
+      document.getElementById('s1-error').classList.add('show');
+      if (!acct) document.getElementById('s1-account').classList.add('error');
+      if (!pmt)  document.getElementById('s1-payment').classList.add('error');
+      return;
+    }
+
+    saved.defaultAccountCode    = acct;
+    saved.defaultPaymentAccount = pmt;
+
+    showView('step2');
+    buildMappingTable();
+    updateStepIndicator(2);
+  }
+
+  function goBackToStep1() {
+    showView('step1');
+    updateStepIndicator(1);
+  }
+
+  // ── Step 2 logic ─────────────────────────────────────────────────────────
+  function buildMappingTable() {
+    const tbody = document.getElementById('mapping-body');
+    tbody.innerHTML = '';
+
+    SG_CODES.forEach(sg => {
+      const tr = document.createElement('tr');
+      tr.id = `row-${sg.code}`;
+
+      // SG code pill
+      const tdCode = document.createElement('td');
+      tdCode.innerHTML = `<span class="code-pill sg">${sg.code}</span>`;
+
+      // SG label
+      const tdLabel = document.createElement('td');
+      tdLabel.textContent = sg.label;
+      tdLabel.style.fontWeight = '400';
+
+      // Xero dropdown
+      const tdXero = document.createElement('td');
+      const sel = document.createElement('select');
+      sel.className = 'mapping-select';
+      sel.id = `map-${sg.code}`;
+      sel.innerHTML = `<option value="">Select Xero account…</option>`;
+      XERO_ACCOUNTS.forEach(x => {
+        const opt = document.createElement('option');
+        opt.value = x.code;
+        opt.textContent = `${x.code} — ${x.label}`;
+        if (saved.mappings[sg.code] === x.code) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener('change', () => {
+        saved.mappings[sg.code] = sel.value;
+        updateRowStatus(sg);
+        updateMismatchBanner();
+      });
+      tdXero.appendChild(sel);
+
+      // Status badge
+      const tdStatus = document.createElement('td');
+      tdStatus.id = `status-${sg.code}`;
+      tdStatus.innerHTML = `<span class="match-badge pending">— Unmapped</span>`;
+
+      tr.appendChild(tdCode);
+      tr.appendChild(tdLabel);
+      tr.appendChild(tdXero);
+      tr.appendChild(tdStatus);
+      tbody.appendChild(tr);
+
+      // Restore saved mapping
+      if (saved.mappings[sg.code]) updateRowStatus(sg);
+    });
+
+    updateMismatchBanner();
+  }
+
+  function getXeroLabel(code) {
+    const x = XERO_ACCOUNTS.find(a => a.code === code);
+    return x ? x.label : '';
+  }
+
+  function updateRowStatus(sg) {
+    const selectedCode = saved.mappings[sg.code] || '';
+    const row = document.getElementById(`row-${sg.code}`);
+    const statusCell = document.getElementById(`status-${sg.code}`);
+
+    if (!selectedCode) {
+      row.classList.remove('mismatch');
+      statusCell.innerHTML = `<span class="match-badge pending">— Unmapped</span>`;
+      return;
+    }
+
+    const isMatch = selectedCode === sg.code; // case-sensitive code match
+
+    if (isMatch) {
+      row.classList.remove('mismatch');
+      statusCell.innerHTML = `<span class="match-badge match">✓ Match</span>`;
+    } else {
+      row.classList.add('mismatch');
+      statusCell.innerHTML = `<span class="match-badge mismatch">⚠ Mismatch</span>`;
+    }
+  }
+
+  function updateMismatchBanner() {
+    const mismatches = SG_CODES.filter(sg => {
+      const code = saved.mappings[sg.code];
+      if (!code) return false;
+      return code !== sg.code; // case-sensitive code match
+    });
+
+    const banner = document.getElementById('mismatch-banner');
+    const text   = document.getElementById('mismatch-text');
+
+    if (mismatches.length > 0) {
+      const names = mismatches.map(m => `"${m.label}"`).join(', ');
+      text.innerHTML = `<strong>${mismatches.length} code${mismatches.length > 1 ? 's' : ''} ${mismatches.length > 1 ? 'have' : 'has'} a label mismatch:</strong> ${names}. These will be flagged in the downloaded file. You can still proceed.`;
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  // ── Download & save ───────────────────────────────────────────────────────
+  function mapAndDownload() {
+    // Save config (mock)
+    console.log('Saving to Add-on config:', {
+      defaultAccountCode:    saved.defaultAccountCode,
+      defaultPaymentAccount: saved.defaultPaymentAccount,
+      mappings:              saved.mappings
+    });
+
+    // Build downloadable text content
+    const defaultAcct  = XERO_ACCOUNTS.find(a => a.code === saved.defaultAccountCode);
+    const defaultPmt   = XERO_ACCOUNTS.find(a => a.code === saved.defaultPaymentAccount);
+    const now          = new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+
+    let lines = [];
+    lines.push('STOREGANISE × XERO — ACCOUNT CODE MAPPING REFERENCE');
+    lines.push('Generated: ' + now);
+    lines.push('');
+    lines.push('DEFAULT SETTINGS');
+    lines.push('─────────────────────────────────────────────────────────');
+    lines.push(`Default account code:    ${defaultAcct ? defaultAcct.code + ' — ' + defaultAcct.label : 'Not set'}`);
+    lines.push(`Default payment account: ${defaultPmt  ? defaultPmt.code  + ' — ' + defaultPmt.label  : 'Not set'}`);
+    lines.push('');
+    lines.push('ACCOUNT CODE MAPPINGS');
+    lines.push('─────────────────────────────────────────────────────────');
+    lines.push(padR('SG Code', 14) + padR('SG Label', 16) + padR('Xero Code', 12) + padR('Xero Label', 28) + 'Status');
+    lines.push('─'.repeat(80));
+
+    SG_CODES.forEach(sg => {
+      const xCode  = saved.mappings[sg.code] || '';
+      const xLabel = xCode ? getXeroLabel(xCode) : '';
+      const status = !xCode ? 'UNMAPPED' : (xCode === sg.code ? 'MATCH' : '** MISMATCH **');
+      lines.push(padR(sg.code, 14) + padR(sg.label, 16) + padR(xCode, 12) + padR(xLabel, 28) + status);
+    });
+
+    lines.push('');
+    lines.push('─────────────────────────────────────────────────────────');
+    lines.push('NOTE: Rows marked "** MISMATCH **" indicate that the Xero');
+    lines.push('account label does not exactly match the Storeganise code label.');
+    lines.push('Please verify these mappings are intentional.');
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'storeganise-xero-account-mapping.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    // Show success
+    setTimeout(() => {
+      showView('success');
+      updateStepIndicator('done');
+    }, 300);
+  }
+
+  function padR(str, len) {
+    return (str || '').padEnd(len);
+  }
+
+  // ── View helpers ──────────────────────────────────────────────────────────
+  function showView(name) {
+    ['step1', 'step2', 'success'].forEach(v => {
+      document.getElementById(`view-${v}`).style.display = v === name ? '' : 'none';
+    });
+  }
+
+  function updateStepIndicator(active) {
+    const n1 = document.getElementById('step1-num');
+    const l1 = document.getElementById('step1-lbl');
+    const n2 = document.getElementById('step2-num');
+    const l2 = document.getElementById('step2-lbl');
+
+    if (active === 1) {
+      n1.className = 'step-number active'; l1.className = 'step-label active';
+      n2.className = 'step-number pending'; l2.className = 'step-label pending';
+    } else if (active === 2) {
+      n1.className = 'step-number done'; n1.textContent = '✓';
+      l1.className = 'step-label';
+      n2.className = 'step-number active'; l2.className = 'step-label active';
+    } else if (active === 'done') {
+      n1.className = 'step-number done'; n1.textContent = '✓';
+      n2.className = 'step-number done'; n2.textContent = '✓';
+      l1.className = 'step-label'; l2.className = 'step-label';
+    }
+  }
+
+  function reviewSetup() {
+    showView('step2');
+    updateStepIndicator(2);
+  }
+
+  function enableAddon() {
+    alert('In production this would enable the Xero Add-on and redirect to the settings page.');
+  }
+
+  init();
+</script>
+</body>
+</html>
